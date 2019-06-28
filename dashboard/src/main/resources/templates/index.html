@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Stock quotes dashboard</title>
+    <link rel="stylesheet" href="/webjars/highcharts/7.1.2/css/highcharts.css"/>
+</head>
+<body>
+<div id="chart"></div>
+<script type="text/javascript" src="/webjars/highcharts/7.1.2/highcharts.js"></script>
+<script type="text/javascript">
+    var chart = new Highcharts.Chart('chart', {
+        title: {
+            text: 'Stock quotes'
+        },
+        xAxis: {
+            type: 'datetime'
+        },
+        yAxis: {
+            title: {
+                text: 'Stock Price'
+            }
+        },
+        legend: {
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'middle'
+        },
+        series: []
+    });
+
+    var updateChart = function(quote) {
+        if (!chart.series.find(s => s.name === quote.symbol)) {
+            chart.addSeries({
+                name: quote.symbol
+            });
+        }
+
+        chart.series
+            .filter(s => s.name === quote.symbol)
+            .forEach(s => s.addPoint([Date.parse(quote.timestamp), quote.price], true, s.data.length > 20));
+    };
+
+    var stockEventSource = new EventSource("/quotes");
+    stockEventSource.onmessage = function(e) {
+        updateChart(JSON.parse(e.data));
+    };
+</script>
+</body>
+</html>
